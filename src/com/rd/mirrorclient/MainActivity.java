@@ -7,6 +7,7 @@ import java.io.IOException;
 import com.example.mirrorclient.R;
 
 import android.app.Activity;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -23,7 +24,7 @@ import com.rd.mirrorclient.FVideoDecoder;
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback{
 	private String TAG = "Client";
-	private SurfaceView videoView;
+	private GLSurfaceView mGLView;
 	private SurfaceHolder videoSurfaceHolder;
 	private Surface mSurface;
 
@@ -31,14 +32,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
- 
-		videoView = (SurfaceView) findViewById(R.id.surface); 
-		videoSurfaceHolder = videoView.getHolder(); 
-		videoSurfaceHolder.addCallback(this);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		
-//		mGLView = new MyGLSurfaceView(this);
-//		setContentView(mGLView);
+		mGLView = new MyGLSurfaceView(this);
+		setContentView(mGLView);
 	}
 
 	@Override
