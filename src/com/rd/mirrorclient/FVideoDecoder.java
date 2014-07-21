@@ -38,7 +38,7 @@ public class FVideoDecoder {
 
 	public void decode(byte[] frame, int size, long ts){
 		long timestamp = nativeDecode(frame, size, ts, decodedYUVBuffer);
-		if(0 <= timestamp){
+		if(0 <= timestamp && null != frame){
 			listener.onVideoBufferFilled(decodedYUVBuffer, mWidth*mHeight*3/2, timestamp);
 		}
 	}

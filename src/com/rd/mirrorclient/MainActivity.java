@@ -70,8 +70,8 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	private final static int WIDTH = 320;
-	private final static int HEIGHT = 240;
+	private final static int WIDTH = 1280;
+	private final static int HEIGHT = 720;
 	
 	private HandlerThread videoFrameHandlerThread;
 	private VideoFrameHandler videoFrameHandler;
@@ -85,14 +85,14 @@ public class MainActivity extends Activity {
 		
 		decoder.setOnVideoDecoderEventListener(new FVideoDecoder.OnVideoDecoderEventListener() {
 			public boolean onVideoBufferFilled(byte[] data, int size, long timestamp) {
-				try{
-					fileoutput.write(data);
-					Log.i(TAG,"frame decoded");
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-				((YUVGLSurfaceView) mGLView).updatePicture(data);
+//				try{
+//					fileoutput.write(data);
+//					Log.i(TAG,"frame decoded");
+//				}catch(Exception e){
+//					e.printStackTrace();
+//				}
 				
+				((YUVGLSurfaceView) mGLView).updatePicture(data);
 				runOnUiThread(new Runnable(){
 					public void run() {
 						mGLView.requestRender();
@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
 			}  
 		});
 
-		AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/dump.h264");
+		AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/Maroon.h264");
 		
 		try {
 			fileoutput = new FileOutputStream(new File("/mnt/sdcard/testdump.yuv"));
@@ -119,8 +119,6 @@ public class MainActivity extends Activity {
 				byte[] frame = frameReader.readFrame(); 
 				if(null != frame){
 					decoder.decode(frame, frame.length, ts+=30);
-					
-					Thread.sleep(50);
 				}else{  
 					Log.i(TAG, "reached EOF");
 					break;

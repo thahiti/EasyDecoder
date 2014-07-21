@@ -23,6 +23,7 @@ public class YUVRender implements GLSurfaceView.Renderer
 	private int mTextureWidth, mTextureHeight, mSourceWidth, mSourceHeight, mSurfaceWidth, mSurfaceHeight;
 
 	//Matrix for world->view->projection transform.
+	private float[] mRotationMatrix = new float[16];
 	private float[] mModelMatrix = new float[16];
 	private float[] mViewMatrix = new float[16];
 	private float[] mProjectionMatrix = new float[16];
@@ -200,29 +201,40 @@ public class YUVRender implements GLSurfaceView.Renderer
 		 
 		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramObject, "u_MVPMatrix");
 
-		//set model matrix
+		//set model matrix 
 		Matrix.setIdentityM(mModelMatrix, 0);
 		Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, 0.0f);
+		Matrix.setRotateM(mRotationMatrix, 0, 90f, 0, 0, 1.0f);
 
 		//Prepare view transform matrix
 		final float eyeX = 0.0f, eyeY = 0.0f, eyeZ = 3f;
 		final float lookX = 0.0f, lookY = 0.0f, lookZ = -1.0f;
 		final float upX = 0.0f, upY = 1.0f, upZ = 0.0f;
 		Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
-
+		
+		
 		//Prepare projection transform matrix
 		float left = -1f;
 		float right = -((float)mTextureWidth/2-mSourceWidth)/((float)mTextureWidth/2);
 		float bottom = ((float)mTextureHeight/2-mSourceHeight)/((float)mTextureHeight/2);
 		float top = 1f;
 		
+		float rotate_left = -1f;
+		float rotate_right = -(bottom+(float)0.005);
+		float rotate_top = right;
+		float rotate_bottom = -1f;
+		
+		
+		
 		float near = 1f;
-		float far = 10f;		
-		Matrix.orthoM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
+		float far = 10f;
+//		Matrix.orthoM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
+		Matrix.orthoM(mProjectionMatrix, 0, rotate_left, rotate_right, rotate_bottom, rotate_top, near, far);
 //		Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
 
         
 		//Prepare Model x View x Projection transform matrix.
+		Matrix.multiplyMM(mModelMatrix, 0, mRotationMatrix, 0, mModelMatrix, 0);
 		Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mModelMatrix, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0);
 		GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
