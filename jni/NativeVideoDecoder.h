@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-JNIEXPORT jint JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeInit(JNIEnv *, jobject, jint, jint);
+JNIEXPORT jint JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeInit(JNIEnv *, jobject, jint, jint, jboolean doColorConvert);
 JNIEXPORT jint JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeDeinit(JNIEnv *, jobject);
-JNIEXPORT jint JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeDecode(JNIEnv *, jobject, jbyteArray, jint, jlong, jbyteArray);
+JNIEXPORT jlong JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeDecode(JNIEnv *, jobject, jbyteArray, jint, jlong, jbyteArray);
 
 #ifdef __cplusplus
 }

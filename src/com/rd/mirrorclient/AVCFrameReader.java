@@ -34,7 +34,6 @@ public class AVCFrameReader {
 		try {
 			read = inputStream.read(readBuffer);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		currentPosition = 0;
@@ -54,7 +53,6 @@ public class AVCFrameReader {
 			}
 			int nextPosition = bufferForProcessing.position()-4;
 			bufferForProcessing.position(nextPosition);
-//			Log.i(TAG, "next position: "+nextPosition);	
 
 			return nextPosition; 
 		}else{
@@ -83,6 +81,5 @@ public class AVCFrameReader {
 		for(int i=0; i<20 && i<data.length; ++i){
 			s += String.format(" %02X", data[i]);
 		}
-//		Log.i(TAG, "ecoded data: "+s+" size: "+ data.length);
 	}
 }

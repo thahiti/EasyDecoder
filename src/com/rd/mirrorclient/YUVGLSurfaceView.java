@@ -23,23 +23,29 @@ import android.opengl.GLSurfaceView;
  * This view can also be used to capture touch events, such as a user
  * interacting with drawn objects.
  */
-public class MyGLSurfaceView extends GLSurfaceView {
+public class YUVGLSurfaceView extends GLSurfaceView {
 
-    private final YUVRender mRenderer;
+	private YUVRender mRenderer;
 
-    public MyGLSurfaceView(Context context) { 
-        super(context);
+	public YUVGLSurfaceView(Context context) { 
+		super(context);
 
-        // Create an OpenGL ES 2.0 context.
-        setEGLContextClientVersion(2);
+		// Create an OpenGL ES 2.0 context.
+		setEGLContextClientVersion(2);
 
-        // Set the Renderer for drawing on the GLSurfaceView
-//        mRenderer = new MyGLRenderer(context);
-        mRenderer = new YUVRender(context,320,240);
-        setRenderer(mRenderer);
+		// Set the Renderer for drawing on the GLSurfaceView
+		mRenderer = new YUVRender(context);
+		setRenderer(mRenderer);
 
-        // Render the view only when there is a change in the drawing data
-        setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-    }
-
+		// Render the view only when there is a change in the drawing data
+		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+	}
+	
+	public void setSourceSize(int w, int h){
+		mRenderer.setSourceSize(w, h);
+	}
+	
+	public void updatePicture(byte[] YUVPicture){
+		mRenderer.updatePicture(YUVPicture);
+	}
 }
