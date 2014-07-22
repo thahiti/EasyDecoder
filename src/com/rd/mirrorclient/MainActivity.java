@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
 //				}
 				
 				((YUVGLSurfaceView) mGLView).updatePicture(data);
+				
 				runOnUiThread(new Runnable(){
 					public void run() {
 						mGLView.requestRender();

@@ -91,46 +91,6 @@ public class YUVRender implements GLSurfaceView.Renderer
 	public void release(){
 		
 	}
-	
-	//create texture object.
-	private void createTextureObject()
-	{
-		Log.i(TAG, "pixel size: "+mSourceWidth+"X"+mSourceHeight+" texture size: "+mTextureWidth+"X"+mTextureHeight);
-
-		GLES20.glPixelStorei ( GLES20.GL_UNPACK_ALIGNMENT, 1 );
-		int[] textureId = new int[3];
-		GLES20.glGenTextures ( 3, textureId, 0 );
-		
-		mSamplerLocU = GLES20.glGetUniformLocation (mProgramObject, "s_texture_u" );
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
-		GLES20.glUniform1i ( mSamplerLocU, 1 );
-		GLES20.glBindTexture ( GLES20.GL_TEXTURE_2D, textureId[1] );
-		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferU );
-		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
-		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		mTextureIdU = textureId[1];
-		
-		mSamplerLocV = GLES20.glGetUniformLocation (mProgramObject, "s_texture_v" );
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
-		GLES20.glUniform1i ( mSamplerLocV, 2 );
-		GLES20.glBindTexture ( GLES20.GL_TEXTURE_2D, textureId[2] );
-		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferV );
-		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
-		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		mTextureIdV = textureId[2];
-
-		mSamplerLocY = GLES20.glGetUniformLocation (mProgramObject, "s_texture_y" );
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glUniform1i ( mSamplerLocY, 0 );
-		GLES20.glBindTexture ( GLES20.GL_TEXTURE_2D, textureId[0] );
-		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth, mTextureHeight, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferY );
-		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
-		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		mTextureIdY = textureId[0];
-		
-		textureCreated = true;
-		needTextureCreation = false;
-	}
 
 	public static int loadShader(int type, String shaderCode){
 		int shader = GLES20.glCreateShader(type);
@@ -240,24 +200,53 @@ public class YUVRender implements GLSurfaceView.Renderer
 		GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
+	//create texture object.
+	private void createTextureObject()
+	{
+		Log.i(TAG, "pixel size: "+mSourceWidth+"X"+mSourceHeight+" texture size: "+mTextureWidth+"X"+mTextureHeight);
+
+		GLES20.glPixelStorei ( GLES20.GL_UNPACK_ALIGNMENT, 1 );
+		int[] textureId = new int[3];
+		GLES20.glGenTextures ( 3, textureId, 0 );
+		
+		mSamplerLocU = GLES20.glGetUniformLocation (mProgramObject, "s_texture_u" );
+		mTextureIdU = textureId[1];
+		
+		mSamplerLocV = GLES20.glGetUniformLocation (mProgramObject, "s_texture_v" );
+		mTextureIdV = textureId[2];
+
+		mSamplerLocY = GLES20.glGetUniformLocation (mProgramObject, "s_texture_y" );
+		mTextureIdY = textureId[0];
+		
+		textureCreated = true;
+		needTextureCreation = false;
+
+	}
+	
 	private void applyTexture(){
 		pixelBufferU.position(0);  
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
 		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdU );
 		GLES20.glUniform1i ( mSamplerLocU, 1 );
 		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferU );
+		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
+		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
 		
 		pixelBufferV.position(0);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
 		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdV );
 		GLES20.glUniform1i ( mSamplerLocV, 2 );
 		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferV );
-
+		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
+		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
+		
 		pixelBufferY.position(0);  
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdY );
 		GLES20.glUniform1i ( mSamplerLocY, 0 );
 		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth,   mTextureHeight,   0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferY );
+		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
+		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
 	}
 
 	public void onDrawFrame(GL10 glUnused)
@@ -268,8 +257,10 @@ public class YUVRender implements GLSurfaceView.Renderer
 			}
 			
 			if(textureCreated){
+		        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
 				applyTexture();
-	
+			
 				GLES20.glUseProgram(mProgramObject);
 				GLES20.glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
 				GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
