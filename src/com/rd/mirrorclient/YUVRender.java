@@ -164,7 +164,7 @@ public class YUVRender implements GLSurfaceView.Renderer
 		//set model matrix 
 		Matrix.setIdentityM(mModelMatrix, 0);
 		Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, 0.0f);
-		Matrix.setRotateM(mRotationMatrix, 0, 90f, 0, 0, 1.0f);
+		Matrix.setRotateM(mRotationMatrix, 0, -90f, 0, 0, 1.0f);
 
 		//Prepare view transform matrix
 		final float eyeX = 0.0f, eyeY = 0.0f, eyeZ = 3f;
@@ -179,10 +179,10 @@ public class YUVRender implements GLSurfaceView.Renderer
 		float bottom = ((float)mTextureHeight/2-mSourceHeight)/((float)mTextureHeight/2);
 		float top = 1f;
 		
-		float rotate_left = -1f;
-		float rotate_right = -(bottom+(float)0.005);
-		float rotate_top = right;
-		float rotate_bottom = -1f;
+		float rotate_left =  bottom+(float)0.005;
+		float rotate_right = 1f;
+		float rotate_top = 1f;
+		float rotate_bottom = -right;
 		
 		
 		
