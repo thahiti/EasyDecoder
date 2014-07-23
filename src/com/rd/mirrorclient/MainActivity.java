@@ -91,14 +91,13 @@ public class MainActivity extends Activity {
 //				}catch(Exception e){
 //					e.printStackTrace();
 //				}
-				
 				((YUVGLSurfaceView) mGLView).updatePicture(data);
 				
 				runOnUiThread(new Runnable(){
 					public void run() {
 						mGLView.requestRender();
 					}
-				});
+				}); 
 
 				return true; 
 			}  
@@ -130,7 +129,7 @@ public class MainActivity extends Activity {
 			e.printStackTrace();
 		}
 		try {
-			fileoutput.close();
+			fileoutput.close(); 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

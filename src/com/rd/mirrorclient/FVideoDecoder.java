@@ -6,6 +6,7 @@ public class FVideoDecoder {
 	private int mWidth;
 	private int mHeight; 
 	private boolean doColorConvert;
+
 	static {
 		System.loadLibrary("fvideodecoder");
 	}
