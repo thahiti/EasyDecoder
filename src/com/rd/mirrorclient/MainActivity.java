@@ -17,6 +17,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.rd.mirrorclient.FVideoDecoder;
 
@@ -28,6 +30,11 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		
+		RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainlayout);
+		Button extra = new Button(this);
+		extra.setText("extra");
+		layout.addView(extra);
 		
 		mGLView = new YUVGLSurfaceView(this);
 		setContentView(mGLView);
@@ -81,7 +88,7 @@ public class MainActivity extends Activity {
 	FileOutputStream fileoutput=null;
 
 	void startTest(){
-		decoder = new FVideoDecoder(WIDTH, HEIGHT, false);
+		decoder = new FVideoDecoder(WIDTH, HEIGHT);
 		
 		decoder.setOnVideoDecoderEventListener(new FVideoDecoder.OnVideoDecoderEventListener() {
 			public boolean onVideoBufferFilled(byte[] data, int size, long timestamp) {
@@ -111,14 +118,20 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH, HEIGHT);
+		((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH/2, HEIGHT/2);
 		
 		long ts=0;
+		boolean needRecreated=true;
 		try {
 			while(true){
 				byte[] frame = frameReader.readFrame(); 
 				if(null != frame){
 					decoder.decode(frame, frame.length, ts+=30);
+					
+					if(ts > 1000 && needRecreated){
+						((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH, HEIGHT);
+						needRecreated = false;
+					}
 				}else{  
 					Log.i(TAG, "reached EOF");
 					break;

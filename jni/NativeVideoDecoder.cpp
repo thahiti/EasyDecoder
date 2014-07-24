@@ -10,10 +10,10 @@
 
 EasyAVCDecoder * easyDecoder;
 
-JNIEXPORT jint JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeInit(JNIEnv *env, jobject thiz, jint width, jint height, jboolean doColorConvert){
+JNIEXPORT jint JNICALL Java_com_rd_mirrorclient_FVideoDecoder_nativeInit(JNIEnv *env, jobject thiz, jint width, jint height){
 
     easyDecoder = new EasyAVCDecoder();
-    easyDecoder->initDecoder(width, height, (int)doColorConvert);
+    easyDecoder->initDecoder(width, height, (int)0);
 
     return 0;
 }

@@ -39,14 +39,18 @@ public class YUVRender implements GLSurfaceView.Renderer
 	private ByteBuffer pixelBufferY, pixelBufferU, pixelBufferV;
 	private int mSamplerLocY, mSamplerLocU, mSamplerLocV;
 	private int mTextureIdY, mTextureIdU, mTextureIdV;
-	
+	int[] textureId = new int[3];
+
 	private int mMVPMatrixHandle;
 
-	private FloatBuffer mVertices;
+	private FloatBuffer mVertices; 
 	private ShortBuffer mIndices;
 
 	private boolean textureCreated, needTextureCreation, pictureUpdated;
 	
+	private int vertexShader;
+	private int fragmentShader;
+
 	private final float[] mVerticesData ={ 
 			-1f, 1f, 0.0f, // Position 0
 			0.0f, 0.0f, // TexCoord 0
@@ -77,21 +81,30 @@ public class YUVRender implements GLSurfaceView.Renderer
 	}
 
 	public void setSourceSize(int width, int height){
+		synchronized (lock) {
 		mSourceWidth = width;
 		mSourceHeight = height;
 		
 		mTextureWidth = decideTextureSize();
 		mTextureHeight = decideTextureSize();
 		
+//		pixelBufferY = ByteBuffer.allocateDirect(mTextureWidth*mTextureHeight);
+//		pixelBufferU = ByteBuffer.allocateDirect(mTextureWidth*mTextureHeight/4);
+//		pixelBufferV = ByteBuffer.allocateDirect(mTextureWidth*mTextureHeight/4);
+		
 		pixelBufferY = ByteBuffer.allocateDirect(mSourceWidth*mSourceHeight);
 		pixelBufferU = ByteBuffer.allocateDirect(mSourceWidth*mSourceHeight/4);
 		pixelBufferV = ByteBuffer.allocateDirect(mSourceWidth*mSourceHeight/4);
 
 		needTextureCreation = true;
+		}
 	}
 	
 	public void release(){
-		
+		deleteTexture();
+		GLES20.glDeleteShader(vertexShader);
+		GLES20.glDeleteShader(fragmentShader);
+		GLES20.glDeleteProgram(mProgramObject);
 	}
 
 	public static int loadShader(int type, String shaderCode){
@@ -138,13 +151,11 @@ public class YUVRender implements GLSurfaceView.Renderer
 						+ "		highp float b = y + 2.017 * u;							\n"
 						+ "  	gl_FragColor = highp vec4(r, g, b, 1.0);				\n"
 						+ "}                                                   			\n";
-
 		
-		int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vShaderStr);
+		vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vShaderStr);
 		checkGlError("load vertex shader");
-		int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderStr);
+		fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderStr);
 		checkGlError("load fragment shader");
-		 
 		mProgramObject = GLES20.glCreateProgram();     
 		checkGlError("create program");
 		Log.i(TAG, "mProgram: "+mProgramObject+" v shader: "+vertexShader+" f shader: "+fragmentShader);
@@ -206,7 +217,6 @@ public class YUVRender implements GLSurfaceView.Renderer
 		Log.i(TAG, "pixel size: "+mSourceWidth+"X"+mSourceHeight+" texture size: "+mTextureWidth+"X"+mTextureHeight);
 
 		GLES20.glPixelStorei ( GLES20.GL_UNPACK_ALIGNMENT, 1 ); 
-		int[] textureId = new int[3];
 		GLES20.glGenTextures ( 3, textureId, 0 );
 
 		mSamplerLocY = GLES20.glGetUniformLocation (mProgramObject, "s_texture_y" );
@@ -240,45 +250,62 @@ public class YUVRender implements GLSurfaceView.Renderer
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
 		textureCreated = true;
 		needTextureCreation = false;
+
 	}
-	 
-	private void applyTexture(){ 
-		pixelBufferY.position(0); 
+	
+	private void deleteTexture(){
+		GLES20.glDeleteTextures(3, textureId, 0);
+	}
+	
+	private void applyTexture(){
+		pixelBufferY.position(0);  
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdY );
+		GLES20.glUniform1i ( mSamplerLocY, 0 );
+//		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth,   mTextureHeight,   0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferY );
+//		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth,   mTextureHeight,   0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, null );
 		GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, mSourceWidth, mSourceHeight, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferY);
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdY );
-		GLES20.glUniform1i ( mSamplerLocV, 0 );
-
-		pixelBufferU.position(0);
+		
+		pixelBufferU.position(0);  
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdU );
+		GLES20.glUniform1i ( mSamplerLocU, 1 );
+//		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferU );
+//		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, null );
 		GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, mSourceWidth/2, mSourceHeight/2, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferU);
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdU );
-		GLES20.glUniform1i ( mSamplerLocV, 1 );
 		
-		pixelBufferV.position(0);
+		pixelBufferV.position(0); 
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
+		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdV );
+		GLES20.glUniform1i ( mSamplerLocV, 2 );
+//		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferV );
+//		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, null );
 		GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, mSourceWidth/2, mSourceHeight/2, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, pixelBufferV);
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		GLES20.glBindTexture( GLES20.GL_TEXTURE_2D, mTextureIdV );
-		GLES20.glUniform1i ( mSamplerLocV, 2 );
+
 	}
 
 	public void onDrawFrame(GL10 glUnused)
 	{
 		synchronized (lock) {
 			if(needTextureCreation){
+				if(textureCreated){
+					Log.i(TAG,"reboot texture unit");
+					deleteTexture();
+					textureCreated = false;
+				}
 				createTextureObject();
 			}
 			
-			if(textureCreated & pictureUpdated){
+			if(textureCreated & pictureUpdated){ 
 		        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		        
-				GLES20.glUseProgram(mProgramObject);
+				GLES20.glUseProgram(mProgramObject); 
 				GLES20.glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
 				GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 	
@@ -313,14 +340,37 @@ public class YUVRender implements GLSurfaceView.Renderer
 	}
 
 	public void updatePicture(byte[] yuvFrame){
-		synchronized (lock) {
-			pixelBufferY.position(0);
-			pixelBufferY.put(yuvFrame,0, mSourceWidth*mSourceHeight);
-			pixelBufferU.position(0);
-			pixelBufferU.put(yuvFrame,mSourceWidth*mSourceHeight, mSourceWidth*mSourceHeight/4);
-			pixelBufferV.position(0);
-			pixelBufferV.put(yuvFrame,(mSourceWidth*mSourceHeight)+(mSourceWidth*mSourceHeight/4), mSourceWidth*mSourceHeight/4);
-			pictureUpdated = true;
+		synchronized (lock) { 
+			if(textureCreated){
+//				pixelBufferY.clear();
+//				pixelBufferU.clear();
+//				pixelBufferV.clear();
+//
+//				int offsetU = mSourceWidth*mSourceHeight;
+//				int offsetV = (mSourceWidth*mSourceHeight) + (mSourceWidth*mSourceHeight)/4;
+//
+//				for(int i=0; i<mSourceHeight; ++i){
+//					pixelBufferY.put(yuvFrame, i*mSourceWidth, mSourceWidth);
+//					pixelBufferY.position(i*mTextureWidth);
+//				}
+//
+//				for(int i=0; i<mSourceHeight/2; ++i){
+//					pixelBufferU.put(yuvFrame, offsetU + (i*mSourceWidth/2), mSourceWidth/2);
+//					pixelBufferU.position(i*mTextureWidth/2);
+//
+//					pixelBufferV.put(yuvFrame, offsetV + (i*mSourceWidth/2), mSourceWidth/2);
+//					pixelBufferV.position(i*mTextureWidth/2);
+//				}
+//				pictureUpdated = true;
+				pixelBufferY.position(0);
+				pixelBufferY.put(yuvFrame,0, mSourceWidth*mSourceHeight);
+				pixelBufferU.position(0);
+				pixelBufferU.put(yuvFrame,mSourceWidth*mSourceHeight, mSourceWidth*mSourceHeight/4);
+				pixelBufferV.position(0);
+				pixelBufferV.put(yuvFrame,(mSourceWidth*mSourceHeight)+(mSourceWidth*mSourceHeight/4), mSourceWidth*mSourceHeight/4);
+				pictureUpdated = true;
+				
+			}
 		}
 	}
 	
