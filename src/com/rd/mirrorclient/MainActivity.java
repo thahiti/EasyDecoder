@@ -118,7 +118,7 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH/2, HEIGHT/2);
+//		((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH/2, HEIGHT/2);
 		
 		long ts=0;
 		boolean needRecreated=true;
