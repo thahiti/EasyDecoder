@@ -110,14 +110,15 @@ public class MainActivity extends Activity {
 			}  
 		});
 
-		AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/Maroon.h264");
+		//AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/dump_960_540.h264");
+		AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/Maroon5.h264");
 		
 		try {
 			fileoutput = new FileOutputStream(new File("/mnt/sdcard/testdump.yuv"));
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+	 	}
 //		((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH/2, HEIGHT/2);
 		
 		long ts=0;
