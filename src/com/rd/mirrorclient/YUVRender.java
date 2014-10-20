@@ -18,7 +18,7 @@ import android.opengl.GLSurfaceView;
 public class YUVRender implements GLSurfaceView.Renderer
 {
 	private Object lock;
-	private final String TAG = "yuv renderer";
+	private static final String TAG = "yuv renderer";
 	private static final int MIN_TEXTURE_SIZE = 256; 
 	private int mTextureWidth, mTextureHeight, mSourceWidth, mSourceHeight, mSurfaceWidth, mSurfaceHeight;
 
@@ -33,7 +33,6 @@ public class YUVRender implements GLSurfaceView.Renderer
 	private int mProgramObject;
 	private int mPositionLoc;
 	private int mTexCoordLoc;
-
 
 	//buffer for texture
 	private ByteBuffer pixelBufferY, pixelBufferU, pixelBufferV;
@@ -63,6 +62,7 @@ public class YUVRender implements GLSurfaceView.Renderer
 	};
 
 	private final short[] mIndicesData ={ 0, 1, 2, 0, 2, 3 };
+	
 	public YUVRender(Context context)
 	{
 		mSourceWidth = 0;
@@ -82,7 +82,7 @@ public class YUVRender implements GLSurfaceView.Renderer
 
 	public void setSourceSize(int width, int height){
 		synchronized (lock) {
-			Log.i(TAG,"allocate texture buffer");
+			Log.i(TAG, String.format("source size set: %d x %d", width, height));
 			mSourceWidth = width;
 			mSourceHeight = height;
 
@@ -110,8 +110,10 @@ public class YUVRender implements GLSurfaceView.Renderer
 
 	public static int loadShader(int type, String shaderCode){
 		int shader = GLES20.glCreateShader(type);
+	
 		GLES20.glShaderSource(shader, shaderCode);
 		checkGlError("source shader");
+
 		GLES20.glCompileShader(shader);
 		checkGlError("compile shader");
 		return shader;
@@ -153,28 +155,34 @@ public class YUVRender implements GLSurfaceView.Renderer
 						+ "  	gl_FragColor = highp vec4(r, g, b, 1.0);				\n"
 						+ "}                                                   			\n";
 
-		vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vShaderStr);
-		checkGlError("load vertex shader");
-		fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderStr);
-		checkGlError("load fragment shader");
 		mProgramObject = GLES20.glCreateProgram();     
 		checkGlError("create program");
+		vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vShaderStr);
+		checkGlError("load vertex shader");
+//		fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderStr);
+		checkGlError("load fragment shader");
 		Log.i(TAG, "mProgram: "+mProgramObject+" v shader: "+vertexShader+" f shader: "+fragmentShader);
 
 		Log.i(TAG,"attach and link shaders");
 		GLES20.glAttachShader(mProgramObject, vertexShader);   
+		Log.i(TAG,"1");
 		checkGlError("attach vertex shader");
 		GLES20.glAttachShader(mProgramObject, fragmentShader); 
+		Log.i(TAG,"2");
 		checkGlError("attach fragment shader");
 		GLES20.glLinkProgram(mProgramObject);  
-		checkGlError("link program");
+ 		checkGlError("link program");
+		Log.i(TAG,"3");
 
 		// Get the attribute locations
 		mPositionLoc = GLES20.glGetAttribLocation(mProgramObject, "a_position");
+		Log.i(TAG,"4");
 		mTexCoordLoc = GLES20.glGetAttribLocation(mProgramObject, "a_texCoord" );
+		Log.i(TAG,"5");
 
 		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramObject, "u_MVPMatrix");
 
+		Log.i(TAG,"6");
 
 		textureCreated = false;
 		Log.i(TAG, "surface created");
@@ -183,8 +191,7 @@ public class YUVRender implements GLSurfaceView.Renderer
 	//create texture object.
 	private void createTextureObject()
 	{
-		Log.i(TAG, "create texture");
-		Log.i(TAG, "pixel size: "+mSourceWidth+"X"+mSourceHeight+" texture size: "+mTextureWidth+"X"+mTextureHeight);
+		Log.i(TAG, "create texture pixel size: "+mSourceWidth+"X"+mSourceHeight+" texture size: "+mTextureWidth+"X"+mTextureHeight);
 
 		GLES20.glPixelStorei ( GLES20.GL_UNPACK_ALIGNMENT, 1 ); 
 		GLES20.glGenTextures ( 3, textureId, 0 );
@@ -218,18 +225,19 @@ public class YUVRender implements GLSurfaceView.Renderer
 		GLES20.glTexImage2D ( GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mTextureWidth/2, mTextureHeight/2, 0, GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, null );
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST );
 		GLES20.glTexParameteri ( GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST );
-		
+
 
 		textureCreated = true;
 		needTextureCreation = false;
 
+		Log.i(TAG, "create texture is done");
 	}
-	
+
 	private void prepareModelViewProjectionMatrix(){
 		//set model matrix 
 		Matrix.setIdentityM(mModelMatrix, 0);
 		Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, 0.0f);
-//		Matrix.setRotateM(mRotationMatrix, 0, -90f, 0, 0, 1.0f);
+		//		Matrix.setRotateM(mRotationMatrix, 0, -90f, 0, 0, 1.0f);
 		Matrix.setRotateM(mRotationMatrix, 0, 0f, 0, 0, 1.0f);
 
 		//Prepare view transform matrix
@@ -245,15 +253,15 @@ public class YUVRender implements GLSurfaceView.Renderer
 		float top = 1f;
 		float bottom = ((float)mTextureHeight/2-mSourceHeight)/((float)mTextureHeight/2);
 
-/*		float rotate_left =  bottom+(float)0.005;
+		/*		float rotate_left =  bottom+(float)0.005;
 		float rotate_right = 1f;
 		float rotate_top = 1f;
 		float rotate_bottom = -right;*/
- 
+
 		float near = 1f;
 		float far = 10f;
 
-//		Matrix.orthoM(mProjectionMatrix, 0, rotate_left, rotate_right, rotate_bottom, rotate_top, near, far);
+		//		Matrix.orthoM(mProjectionMatrix, 0, rotate_left, rotate_right, rotate_bottom, rotate_top, near, far);
 		Matrix.orthoM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
 
 
@@ -319,16 +327,27 @@ public class YUVRender implements GLSurfaceView.Renderer
 				Log.i(TAG,"draw by texture");
 				GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+				//following cause GLES error code, 502
 				GLES20.glUseProgram(mProgramObject); 
 				GLES20.glViewport(0, 0, mSurfaceWidth, mSurfaceHeight);
 				GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
 				mVertices.position(0);
-				GLES20.glVertexAttribPointer ( mPositionLoc, 3, GLES20.GL_FLOAT, false, 5 * 4, mVertices );
+				//following cause GLES error code, 501
+				GLES20.glVertexAttribPointer ( 
+						mPositionLoc, 
+						3 /* 3 data */, 
+						GLES20.GL_FLOAT, 
+						false, 
+						5 * 4 /* stride. next data will be found after 20 bytes. 20 = 5x4, 5 value(3 for vertex, 2 for texture coordinate), each 4 byte */, 
+						mVertices );
+				
 				mVertices.position(3);
+				//following cause GLES error code, 501
 				GLES20.glVertexAttribPointer ( mTexCoordLoc, 2, GLES20.GL_FLOAT, false, 5 * 4, mVertices );
-
+				//following cause GLES error code, 501
 				GLES20.glEnableVertexAttribArray ( mPositionLoc );
+				//following cause GLES error code, 501
 				GLES20.glEnableVertexAttribArray ( mTexCoordLoc );
 
 				applyTexture();

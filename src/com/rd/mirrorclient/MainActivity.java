@@ -1,11 +1,10 @@
 package com.rd.mirrorclient;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import com.example.mirrorclient.R;
 
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
@@ -16,28 +15,57 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
 import com.rd.mirrorclient.FVideoDecoder;
+import com.example.mirrorclient.R;
 
 public class MainActivity extends Activity {
 	private String TAG = "Client";
 	private GLSurfaceView mGLView;
+	private DataInputStream inputStream;
+
+	private int mWidth;
+	private int mHeight;
+ 
+	private final static int option = 2;
 	
 	protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		
-		RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainlayout);
-		Button extra = new Button(this);
-		extra.setText("extra");
-		layout.addView(extra);
-		
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 		mGLView = new YUVGLSurfaceView(this);
-		setContentView(mGLView);
+		
+		setContentView(R.layout.activity_main);
+
+		RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainlayout);
+
+        RelativeLayout.LayoutParams glParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+
+		layout.addView(mGLView, glParams);
+		
+	
+		switch (option){
+		case 1:
+            inputStream = new DataInputStream(getResources().openRawResource(R.raw.maroon5_1280x720));
+            mWidth = 1280;
+            mHeight = 720;
+			break;
+		case 2:
+			inputStream = new DataInputStream(getResources().openRawResource(R.raw.maroon5_320x240));
+			mWidth = 320;
+			mHeight = 240;
+			break;
+		}
+
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -55,7 +83,7 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
+	} 
 
 	protected void onStart() {
 		videoFrameHandlerThread = new HandlerThread("Video frame thread");
@@ -64,7 +92,7 @@ public class MainActivity extends Activity {
 
 		videoFrameHandler.post(new Runnable() {
 			public void run() {
-				startTest();
+				startTest(); 
 			}
 		});
 
@@ -77,27 +105,26 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	private final static int WIDTH = 1280;
-	private final static int HEIGHT = 720;
+
 	
 	private HandlerThread videoFrameHandlerThread;
-	private VideoFrameHandler videoFrameHandler;
+	private VideoFrameHandler videoFrameHandler; 
 
 	private FVideoDecoder decoder;
 	
 	FileOutputStream fileoutput=null;
 
 	void startTest(){
-		decoder = new FVideoDecoder(WIDTH, HEIGHT);
+		decoder = new FVideoDecoder(mWidth, mHeight);
 		
 		decoder.setOnVideoDecoderEventListener(new FVideoDecoder.OnVideoDecoderEventListener() {
 			public boolean onVideoBufferFilled(byte[] data, int size, long timestamp) {
-//				try{
-//					fileoutput.write(data);
-//					Log.i(TAG,"frame decoded");
-//				}catch(Exception e){
-//					e.printStackTrace();
-//				}
+				try{
+					if(null != fileoutput)
+						fileoutput.write(data);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 				((YUVGLSurfaceView) mGLView).updatePicture(data);
 				
 				runOnUiThread(new Runnable(){
@@ -110,16 +137,7 @@ public class MainActivity extends Activity {
 			}  
 		});
 
-		//AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/dump_960_540.h264");
-		AVCFrameReader frameReader = new AVCFrameReader("/mnt/sdcard/Maroon5.h264");
-		
-		try {
-			fileoutput = new FileOutputStream(new File("/mnt/sdcard/testdump.yuv"));
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-	 	}
-//		((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH/2, HEIGHT/2);
+		AVCFrameReader frameReader = new AVCFrameReader(inputStream);
 		
 		long ts=0;
 		boolean needRecreated=true;
@@ -130,9 +148,10 @@ public class MainActivity extends Activity {
 					decoder.decode(frame, frame.length, ts+=30);
 					
 					if(ts > 1000 && needRecreated){
-						((YUVGLSurfaceView)mGLView).setSourceSize(WIDTH, HEIGHT);
+						((YUVGLSurfaceView)mGLView).setSourceSize(mWidth, mHeight);
 						needRecreated = false;
 					}
+					
 				}else{  
 					Log.i(TAG, "reached EOF");
 					break;
@@ -143,7 +162,8 @@ public class MainActivity extends Activity {
 			e.printStackTrace();
 		}
 		try {
-			fileoutput.close(); 
+			if(null != fileoutput)
+				fileoutput.close(); 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

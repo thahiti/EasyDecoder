@@ -16,9 +16,9 @@ public class AVCFrameReader {
 	private int bufferSize, currentPosition;
 	private ByteBuffer bufferForProcessing;
 	
-	public AVCFrameReader(String filename){
+	public AVCFrameReader(DataInputStream stream){
 		try {
-			inputStream = new DataInputStream(new FileInputStream(filename));
+			inputStream = stream;
 		}catch(Exception e){  
 			e.printStackTrace();     
 		}  
