@@ -159,31 +159,23 @@ public class YUVRender implements GLSurfaceView.Renderer
 		checkGlError("create program");
 		vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vShaderStr);
 		checkGlError("load vertex shader");
-//		fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderStr);
+		fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fShaderStr);
 		checkGlError("load fragment shader");
 		Log.i(TAG, "mProgram: "+mProgramObject+" v shader: "+vertexShader+" f shader: "+fragmentShader);
-
 		Log.i(TAG,"attach and link shaders");
 		GLES20.glAttachShader(mProgramObject, vertexShader);   
-		Log.i(TAG,"1");
 		checkGlError("attach vertex shader");
-		GLES20.glAttachShader(mProgramObject, fragmentShader); 
-		Log.i(TAG,"2");
+		GLES20.glAttachShader(mProgramObject, fragmentShader);
 		checkGlError("attach fragment shader");
 		GLES20.glLinkProgram(mProgramObject);  
  		checkGlError("link program");
-		Log.i(TAG,"3");
+		
 
 		// Get the attribute locations
 		mPositionLoc = GLES20.glGetAttribLocation(mProgramObject, "a_position");
-		Log.i(TAG,"4");
 		mTexCoordLoc = GLES20.glGetAttribLocation(mProgramObject, "a_texCoord" );
-		Log.i(TAG,"5");
 
 		mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramObject, "u_MVPMatrix");
-
-		Log.i(TAG,"6");
-
 		textureCreated = false;
 		Log.i(TAG, "surface created");
 	}
